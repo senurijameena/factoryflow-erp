@@ -1,0 +1,46 @@
+# ============================================
+# Sensitive Credentials & Local Environment
+# ============================================
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# ============================================
+# Composer / PHP Dependencies & Cache
+# ============================================
+/vendor/
+composer.phar
+
+# ============================================
+# IDE, Editor & Agent Artifacts (Keep clean!)
+# ============================================
+.antigravity/
+.gemini/
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.project
+.settings/
+
+# ============================================
+# OS Temporary & Cache Files
+# ============================================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+*.tmp
+*.temp
+
+# ============================================
+# Uploaded Media / Dynamic Runtime Files
+# ============================================
+/assets/uploads/*
+!/assets/uploads/.gitkeep
+/logs/*
+!/logs/.gitkeep
+*.log
