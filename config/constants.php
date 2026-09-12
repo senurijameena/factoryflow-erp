@@ -1,8 +1,11 @@
-﻿<?php
+<?php
 declare(strict_types=1);
 
 define('APP_NAME', 'FactoryFlow');
 define('APP_VERSION', '1.0.0');
+if (!defined('APP_URL')) {
+    define('APP_URL', 'http://localhost/factoryflow');
+}
 
 define('ROLE_ADMIN', 'admin');
 define('ROLE_MANAGER', 'manager');
