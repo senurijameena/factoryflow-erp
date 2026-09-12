@@ -9,19 +9,56 @@ function e(?string $string): string
     return htmlspecialchars($string ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
-function json_response(bool $success, mixed $data = null, ?string $error = null, ?array $meta = null, int $statusCode = 200): void
-{
+function json_response(
+    bool $success,
+    mixed $data = null,
+    mixed $error = null,
+    mixed $meta = null,
+    int $statusCode = 200
+): void {
+    if (is_int($meta)) {
+        $statusCode = $meta;
+        $meta = null;
+    } elseif (!is_array($meta)) {
+        $meta = null;
+    }
+
+    if (is_int($error)) {
+        $statusCode = $error;
+        $error = null;
+    } elseif (!is_string($error) && $error !== null) {
+        $error = (string)$error;
+    }
+
     if (!headers_sent()) {
         http_response_code($statusCode);
         header('Content-Type: application/json; charset=UTF-8');
     }
 
-    echo json_encode([
+    $payload = [
         'success' => $success,
         'data'    => $data,
         'error'   => $error,
         'meta'    => $meta
-    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    ];
+
+    if (is_array($data)) {
+        if (isset($data['message'])) {
+            $payload['message'] = $data['message'];
+        }
+        if (isset($data['redirect'])) {
+            $payload['redirect'] = $data['redirect'];
+        }
+        if (isset($data['redirect_url'])) {
+            $payload['redirect_url'] = $data['redirect_url'];
+        }
+    }
+
+    if (ob_get_length()) {
+        ob_clean();
+    }
+
+    echo json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     exit;
 }
 

@@ -41,18 +41,29 @@ const App = (function () {
 
         try {
             const response = await fetch(url, config);
-            const contentType = response.headers.get('content-type') || '';
+            const text = await response.text();
 
             let data;
-            if (contentType.includes('application/json')) {
-                data = await response.json();
-            } else {
-                const text = await response.text();
-                throw new Error(text || `Server returned HTTP ${response.status}`);
+            try {
+                data = JSON.parse(text);
+            } catch (parseErr) {
+                let cleanMsg = text.trim();
+                if (cleanMsg.startsWith('<') && typeof DOMParser !== 'undefined') {
+                    try {
+                        const doc = new DOMParser().parseFromString(cleanMsg, 'text/html');
+                        cleanMsg = (doc.body ? doc.body.textContent : cleanMsg).trim();
+                    } catch (_) {}
+                }
+                const err = new Error(cleanMsg || `Server returned HTTP ${response.status}`);
+                err.status = response.status;
+                err.raw = text;
+                throw err;
             }
 
             if (!response.ok || (data && data.success === false)) {
-                const errorMsg = (data && data.error) ? data.error : `Request failed (HTTP ${response.status})`;
+                const errorMsg = (data && data.error) 
+                    ? data.error 
+                    : ((data && data.message) ? data.message : `Request failed (HTTP ${response.status})`);
                 const err = new Error(errorMsg);
                 err.response = data;
                 err.status = response.status;
@@ -139,8 +150,55 @@ const App = (function () {
                     body: formData
                 });
 
+                const message = (result && result.message) || 
+                                (result && result.data && result.data.message) || 
+                                'Operation completed successfully.';
+
+                toast('success', message);
+
+                // Modal management: hide modal and reset inputs if form is within a modal
+                const modalEl = form.closest('.modal');
+                if (modalEl) {
+                    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                        const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                        if (modalInstance) {
+                            modalInstance.hide();
+                        }
+                    }
+                    form.reset();
+                }
+
+                // Check for redirect target
+                let redirectUrl = (result && result.redirect) || 
+                                  (result && result.data && result.data.redirect) || 
+                                  (result && result.data && result.data.redirect_url) ||
+                                  (result && result.redirect_url);
+
                 if (typeof callback === 'function') {
                     callback(result);
+                } else if (modalEl) {
+                    if (typeof window.loadCategories === 'function') window.loadCategories();
+                    if (typeof window.loadUnits === 'function') window.loadUnits();
+                    if (typeof window.loadProducts === 'function') window.loadProducts();
+                }
+
+                if (redirectUrl) {
+                    const metaApp = document.querySelector('meta[name="app-url"]');
+                    const baseApp = metaApp ? metaApp.getAttribute('content').replace(/\/+$/, '') : '';
+                    if (redirectUrl.startsWith('/') && baseApp) {
+                        try {
+                            const appPath = new URL(baseApp, window.location.origin).pathname.replace(/\/+$/, '');
+                            if (appPath && !redirectUrl.startsWith(appPath + '/')) {
+                                redirectUrl = baseApp + redirectUrl;
+                            }
+                        } catch (_) {
+                            redirectUrl = baseApp + redirectUrl;
+                        }
+                    }
+
+                    setTimeout(function () {
+                        window.location.href = redirectUrl;
+                    }, 500);
                 }
             } catch (err) {
                 const message = err.message || 'An unexpected error occurred. Please try again.';

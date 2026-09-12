@@ -52,6 +52,8 @@ while ($row = $historyStmt->fetch(PDO::FETCH_ASSOC)) {
     }
 }
 
+$prodValuesSum = array_sum($prodValues);
+
 $topProductsStmt = $pdo->query("
     SELECT p.name, COALESCE(SUM(po.quantity_produced), 0) as total_qty
     FROM products p
@@ -64,16 +66,45 @@ $topProductsStmt = $pdo->query("
 $topProducts = $topProductsStmt->fetchAll(PDO::FETCH_ASSOC);
 $topProductLabels = [];
 $topProductData = [];
+$topMetricName = 'Units Produced';
 
-if (empty($topProducts)) {
-    $topProductLabels = ['No Production Data'];
-    $topProductData = [1];
-} else {
-    foreach ($topProducts as $tp) {
-        $topProductLabels[] = $tp['name'];
-        $topProductData[] = (float)$tp['total_qty'];
+$hasCompletedOrders = false;
+foreach ($topProducts as $tp) {
+    if ((float)$tp['total_qty'] > 0) {
+        $hasCompletedOrders = true;
+        break;
     }
 }
+
+if ($hasCompletedOrders) {
+    foreach ($topProducts as $tp) {
+        if ((float)$tp['total_qty'] > 0) {
+            $topProductLabels[] = $tp['name'];
+            $topProductData[] = (float)$tp['total_qty'];
+        }
+    }
+} else {
+    // If no completed production orders yet, show top products by warehouse stock level
+    $stockStmt = $pdo->query("
+        SELECT name, current_stock 
+        FROM products 
+        WHERE is_active = 1 AND current_stock > 0 
+        ORDER BY current_stock DESC 
+        LIMIT 5
+    ");
+    $stockProducts = $stockStmt->fetchAll(PDO::FETCH_ASSOC);
+    if (!empty($stockProducts)) {
+        $topMetricName = 'Units in Stock';
+        foreach ($stockProducts as $sp) {
+            $topProductLabels[] = $sp['name'];
+            $topProductData[] = (float)$sp['current_stock'];
+        }
+    } else {
+        $topProductLabels = [];
+        $topProductData = [];
+    }
+}
+$hasProductData = !empty($topProductData) && array_sum($topProductData) > 0;
 
 $recentProdOrdersStmt = $pdo->query("
     SELECT po.id, po.order_no, po.quantity_planned, po.quantity_produced, po.status, po.start_date, po.due_date,
@@ -179,7 +210,7 @@ require_once __DIR__ . '/../includes/layout_header.php';
                 <div class="fw-semibold text-dark">
                     <i class="fa-solid fa-chart-area text-primary me-2"></i> Production Output (Past 30 Days)
                 </div>
-                <span class="badge bg-light text-secondary border">Units Completed</span>
+                <span class="badge bg-light text-secondary border"><?= $prodValuesSum > 0 ? number_format($prodValuesSum) . ' Units Completed' : '0 Units Completed' ?></span>
             </div>
             <div class="card-body">
                 <div style="height: 280px; position: relative;">
@@ -195,12 +226,24 @@ require_once __DIR__ . '/../includes/layout_header.php';
                 <div class="fw-semibold text-dark">
                     <i class="fa-solid fa-chart-pie text-primary me-2"></i> Top 5 Products
                 </div>
-                <span class="badge bg-light text-secondary border">Output Distribution</span>
+                <span class="badge bg-light text-secondary border"><?= $hasCompletedOrders ? 'Output Distribution' : ($hasProductData ? 'Stock Distribution' : 'No Data') ?></span>
             </div>
             <div class="card-body d-flex align-items-center justify-content-center">
-                <div style="height: 260px; width: 100%; position: relative;">
-                    <canvas id="topProductsChart"></canvas>
-                </div>
+                <?php if ($hasProductData): ?>
+                    <div style="height: 260px; width: 100%; position: relative;">
+                        <canvas id="topProductsChart"></canvas>
+                    </div>
+                <?php else: ?>
+                    <div class="d-flex flex-column align-items-center justify-content-center text-center py-4 w-100" style="min-height: 240px;">
+                        <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center mb-3 text-muted" style="width: 56px; height: 56px;">
+                            <i class="fa-solid fa-chart-pie fa-2x opacity-50"></i>
+                        </div>
+                        <div class="fw-semibold text-dark mb-1">No Product Data Yet</div>
+                        <p class="text-muted small mb-0" style="max-width: 240px;">
+                            Distribution will appear once products have inventory or completed production orders.
+                        </p>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -335,6 +378,11 @@ require_once __DIR__ . '/../includes/layout_header.php';
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    if (typeof Chart === 'undefined') {
+        console.error('[Dashboard] Chart.js library is not available.');
+        return;
+    }
+
     const prodDays = <?= json_encode(array_values($prodDays)) ?>;
     const prodValues = <?= json_encode(array_values($prodValues)) ?>;
 
@@ -352,21 +400,33 @@ document.addEventListener('DOMContentLoaded', function () {
                     borderWidth: 2,
                     fill: true,
                     tension: 0.35,
-                    pointRadius: 2,
-                    pointHoverRadius: 5
+                    pointRadius: 3,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: '#2563eb',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 1.5
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { display: false }
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                return ` Produced: ${context.parsed.y} units`;
+                            }
+                        }
+                    }
                 },
                 scales: {
                     y: {
                         beginAtZero: true,
+                        suggestedMin: 0,
+                        suggestedMax: 10,
                         grid: { color: '#f1f5f9' },
-                        ticks: { precision: 0 }
+                        ticks: { precision: 0, stepSize: 2 }
                     },
                     x: {
                         grid: { display: false },
@@ -381,36 +441,46 @@ document.addEventListener('DOMContentLoaded', function () {
     if (ctxTop) {
         const topLabels = <?= json_encode($topProductLabels) ?>;
         const topData = <?= json_encode($topProductData) ?>;
+        const metricName = <?= json_encode($topMetricName) ?>;
 
-        new Chart(ctxTop, {
-            type: 'doughnut',
-            data: {
-                labels: topLabels,
-                datasets: [{
-                    data: topData,
-                    backgroundColor: [
-                        '#2563eb',
-                        '#0ea5e9',
-                        '#10b981',
-                        '#f59e0b',
-                        '#8b5cf6'
-                    ],
-                    borderWidth: 2,
-                    borderColor: '#ffffff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { boxWidth: 12, font: { size: 11 } }
-                    }
+        if (topData.length > 0 && topData.some(v => v > 0)) {
+            new Chart(ctxTop, {
+                type: 'doughnut',
+                data: {
+                    labels: topLabels,
+                    datasets: [{
+                        data: topData,
+                        backgroundColor: [
+                            '#2563eb',
+                            '#0ea5e9',
+                            '#10b981',
+                            '#f59e0b',
+                            '#8b5cf6'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
                 },
-                cutout: '68%'
-            }
-        });
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { boxWidth: 12, font: { size: 11 }, padding: 12 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return ` ${context.label}: ${context.raw} ${metricName.toLowerCase()}`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '68%'
+                }
+            });
+        }
     }
 });
 </script>

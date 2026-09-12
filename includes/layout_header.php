@@ -30,6 +30,7 @@ $pageTitle = $pageTitle ?? 'Dashboard';
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="<?= e($appUrl) ?>/assets/css/style.css">
+    <script src="<?= e($appUrl) ?>/assets/js/chart.umd.min.js"></script>
 </head>
 <body>
 <div class="ff-app-wrapper">
