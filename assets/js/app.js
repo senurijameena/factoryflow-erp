@@ -7,6 +7,13 @@ const App = (function () {
     }
 
     async function request(url, options = {}) {
+        if (typeof url !== 'string') {
+            if (url && typeof url.getAttribute === 'function') {
+                url = url.getAttribute('action') || (url.form && url.form.getAttribute('action')) || url.getAttribute('href') || String(url);
+            } else {
+                url = String(url || '');
+            }
+        }
         const config = {
             method: options.method || 'GET',
             headers: {
@@ -220,7 +227,39 @@ const App = (function () {
     function initLayout() {
         const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
         const sidebar = document.querySelector('.ff-sidebar');
+        const sidebarNav = document.querySelector('.ff-sidebar-nav');
         const backdrop = document.querySelector('.ff-sidebar-backdrop');
+
+        // Sidebar scroll preservation and active item visibility
+        if (sidebarNav) {
+            const savedScroll = sessionStorage.getItem('ff_sidebar_scroll');
+            if (savedScroll !== null) {
+                sidebarNav.scrollTop = parseInt(savedScroll, 10);
+            }
+
+            const activeLink = sidebarNav.querySelector('.ff-sidebar-link.active');
+            if (activeLink) {
+                const navRect = sidebarNav.getBoundingClientRect();
+                const linkRect = activeLink.getBoundingClientRect();
+                if (linkRect.top < navRect.top || linkRect.bottom > navRect.bottom) {
+                    activeLink.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+                }
+            }
+
+            // Preserve scroll position when clicking navigation links
+            sidebarNav.addEventListener('click', function (e) {
+                const link = e.target.closest('.ff-sidebar-link');
+                if (link) {
+                    sessionStorage.setItem('ff_sidebar_scroll', sidebarNav.scrollTop.toString());
+                }
+            });
+
+            window.addEventListener('beforeunload', function () {
+                if (sidebarNav) {
+                    sessionStorage.setItem('ff_sidebar_scroll', sidebarNav.scrollTop.toString());
+                }
+            });
+        }
 
         if (sidebarToggleBtn && sidebar) {
             sidebarToggleBtn.addEventListener('click', function (e) {

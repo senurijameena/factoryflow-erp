@@ -44,3 +44,10 @@ $RECYCLE.BIN/
 /logs/*
 !/logs/.gitkeep
 *.log
+
+# ============================================
+# Test & Scratch Artifacts
+# ============================================
+scratch_edge/
+overflow_log.txt
+test_*
