@@ -48,17 +48,19 @@ A high-performance, modular Manufacturing Resource Planning (ERP) platform built
 
 *Dependency Protection: Foreign key cascades and API validation prevent orphan records (e.g., blocking deletion of materials tied to active BOMs).
 
+Here is the cleanly formatted Markdown version with proper line breaks, indentation, and fenced code blocks so it renders correctly on GitHub:
+
 ### Step-by-Step Installation
 
 1. **Clone the Repository:**
    ```bash
-   git clone [https://github.com/yourusername/factoryflow.git](https://github.com/yourusername/factoryflow.git)
+   git clone [https://github.com/yourusername/factoryflow.git](https://github.com/senurijameena/factoryflow.git)
 
 ```
 
 Place the project directory into your web root (e.g., `C:/xampp/htdocs/factoryflow` or `/var/www/html/factoryflow`).
 
-2. **Configure Environment Settings:**
+2. **Configure the Database:**
 * Start your Apache and MySQL services.
 * Open phpMyAdmin (or your MySQL CLI) and create a database:
 ```sql
@@ -74,6 +76,8 @@ mysql -u root -p factoryflow < sql/schema.sql
 ```
 
 
+
+
 3. **Configure Environment Settings:**
 * Copy or rename `config/database.example.php` to `config/database.php` (if applicable) and configure your database credentials:
 ```php
@@ -83,6 +87,8 @@ define('DB_USER', 'root');
 define('DB_PASS', '');
 
 ```
+
+
 
 
 4. **Run the Application:**
@@ -98,8 +104,3 @@ define('DB_PASS', '');
 ```
 
 ```
-
-Navigate to http://localhost/factoryflow in your browser.
-Log in using default credentials (configured in seed scripts):
-Username: admin
-Password: admin123
