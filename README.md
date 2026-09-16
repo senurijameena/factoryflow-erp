@@ -48,35 +48,56 @@ A high-performance, modular Manufacturing Resource Planning (ERP) platform built
 
 *Dependency Protection: Foreign key cascades and API validation prevent orphan records (e.g., blocking deletion of materials tied to active BOMs).
 
-## ⚙️ Installation & Local Setup
-**Prerequisites**
-PHP 8.2 or higher
-MySQL 8.0+
-Apache Web Server (e.g., via XAMPP)
-Git
+### Step-by-Step Installation
 
-## Step-by-Step Installation
-*Clone the Repository:
-git clone [https://github.com/yourusername/factoryflow.git](https://github.com/senurijameena/factoryflow.git)
+1. **Clone the Repository:**
+   ```bash
+   git clone [https://github.com/yourusername/factoryflow.git](https://github.com/yourusername/factoryflow.git)
 
-*Place the project directory into your web root (e.g., C:/xampp/htdocs/factoryflow or /var/www/html/factoryflow).
+```
 
-*Configure the Database:
+Place the project directory into your web root (e.g., `C:/xampp/htdocs/factoryflow` or `/var/www/html/factoryflow`).
 
-Start your Apache and MySQL services.
-Open phpMyAdmin (or your MySQL CLI) and create a database: CREATE DATABASE factoryflow CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-Import the database schema: mysql -u root -p factoryflow < sql/schema.sql
+2. **Configure Environment Settings:**
+* Start your Apache and MySQL services.
+* Open phpMyAdmin (or your MySQL CLI) and create a database:
+```sql
+CREATE DATABASE factoryflow CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-*Configure Environment Settings:
+```
 
-Copy or rename config/database.example.php to config/database.php (if applicable) and configure your database credentials:
 
+* Import the database schema:
+```bash
+mysql -u root -p factoryflow < sql/schema.sql
+
+```
+
+
+3. **Configure Environment Settings:**
+* Copy or rename `config/database.example.php` to `config/database.php` (if applicable) and configure your database credentials:
+```php
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'factoryflow');
 define('DB_USER', 'root');
 define('DB_PASS', '');
 
-*Run the Application:
+```
+
+
+4. **Run the Application:**
+* Navigate to `http://localhost/factoryflow` in your browser.
+* Log in using default credentials (configured in seed scripts):
+* **Username:** `admin`
+* **Password:** `admin123`
+
+
+
+
+
+```
+
+```
 
 Navigate to http://localhost/factoryflow in your browser.
 Log in using default credentials (configured in seed scripts):
