@@ -54,7 +54,7 @@ Here is the cleanly formatted Markdown version with proper line breaks, indentat
 
 1. **Clone the Repository:**
    ```bash
-   git clone [https://github.com/yourusername/factoryflow.git](https://github.com/senurijameena/factoryflow.git)
+   git clone (https://github.com/senurijameena/factoryflow.git)
 
 
 
