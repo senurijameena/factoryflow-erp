@@ -56,21 +56,21 @@ Here is the cleanly formatted Markdown version with proper line breaks, indentat
    ```bash
    git clone [https://github.com/yourusername/factoryflow.git](https://github.com/senurijameena/factoryflow.git)
 
-```
+
 
 Place the project directory into your web root (e.g., `C:/xampp/htdocs/factoryflow` or `/var/www/html/factoryflow`).
 
 2. **Configure the Database:**
 * Start your Apache and MySQL services.
 * Open phpMyAdmin (or your MySQL CLI) and create a database:
-```sql
+```
 CREATE DATABASE factoryflow CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 ```
 
 
 * Import the database schema:
-```bash
+```
 mysql -u root -p factoryflow < sql/schema.sql
 
 ```
@@ -96,8 +96,6 @@ define('DB_PASS', '');
 * Log in using default credentials (configured in seed scripts):
 * **Username:** `admin`
 * **Password:** `admin123`
-
-
 
 
 
