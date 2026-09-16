@@ -46,9 +46,7 @@ A high-performance, modular Manufacturing Resource Planning (ERP) platform built
     "meta": { ... }
   }
 
-*Dependency Protection: Foreign key cascades and API validation prevent orphan records (e.g., blocking deletion of materials tied to active BOMs).
-
-Here is the cleanly formatted Markdown version with proper line breaks, indentation, and fenced code blocks so it renders correctly on GitHub:
+***Dependency Protection:** Foreign key cascades and API validation prevent orphan records (e.g., blocking deletion of materials tied to active BOMs).
 
 ### Step-by-Step Installation
 
